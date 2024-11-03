@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: springboot-psql-app-props
+# key: <spap
+# --
+spring.datasource.url= jdbc:postgresql://localhost:5432/${1:dbname}
+spring.datasource.username= ${2:username}
+spring.datasource.password= ${3:password}
+
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation= true
+spring.jpa.properties.hibernate.dialect= org.hibernate.dialect.PostgreSQLDialect
+
+# Hibernate ddl auto (create, create-drop, validate, update)
+spring.jpa.hibernate.ddl-auto= update

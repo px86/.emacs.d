@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: C make template
+# key: <c
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# --
+CC = gcc
+CFLAGS = -Wall -Werror -Wpedantic -std=c11
+LIBS = $0
+
+$1: $2
+`(insert-char ?\t)`$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+
+%.o: src/%.c src/include/%.h
+`(insert-char ?\t)`$(CC) $(CFLAGS) -o $@ -c $< $(LIBS)
+
+clean:
+`(insert-char ?\t)`rm -rf *.o $1

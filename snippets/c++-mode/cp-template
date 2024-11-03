@@ -1,0 +1,24 @@
+# -*- mode: snippet -*-
+# name: Competitive Programming Template
+# key: cpt
+# --
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef unsigned int ui;
+typedef unsigned long long ull;
+typedef vector<int> vi;
+
+#define endl '\n'
+#define PRINT(x) for (const auto& t: x) cout << t << ' '; cout << '\n';
+
+int main() {
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+
+    $0
+
+    return 0;
+}
