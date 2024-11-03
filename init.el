@@ -384,7 +384,7 @@ and `my-dark-theme'"
 
 (global-set-key (kbd "C-c a") #'org-agenda)
 
-(setq org-agenda-files '("~/Org/inbox.org"))
+(setq org-agenda-files (list (expand-file-name "inbox.org" org-directory)))
 (setq org-agenda-start-with-log-mode t)
 (setq org-log-done 'time)
 (setq org-log-into-drawer t)
@@ -421,9 +421,7 @@ and `my-dark-theme'"
 
 (use-package org-roam
   :init
-  (if my-android-phone-p
-      (setq org-roam-directory "~/storage/Notes")
-    (setq org-roam-directory "~/Notes"))
+  (setq org-roam-directory (expand-file-name "Roam" org-directory))
   :custom
   (org-roam-dailies-directory "Journal/")
   (org-roam-db-location "~/.cache/org-roam.db")
