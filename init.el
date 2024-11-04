@@ -202,7 +202,9 @@ and `my-dark-theme'"
   (setq dashboard-projects-backend 'project-el)
   (setq dashboard-items '((recents  . 3)
                           (projects . 5)
-                          (registers . 3))))
+                          (registers . 3)))
+  (if my-windows-laptop-p
+      (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg))))
 
 (use-package savehist
   :config

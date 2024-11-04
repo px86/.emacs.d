@@ -313,7 +313,9 @@ Keep the emacs directory clean, and put all backup files in a single place.
     (setq dashboard-projects-backend 'project-el)
     (setq dashboard-items '((recents  . 3)
                             (projects . 5)
-                            (registers . 3))))
+                            (registers . 3)))
+    (if my-windows-laptop-p
+        (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg))))
 #+end_src
 
 * Completion system
