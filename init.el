@@ -63,10 +63,15 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-(setq my-fixed-pitch-font (if my-windows-laptop-p "Consolas"
-                            "Cascadia Code"))
-(setq my-variable-pitch-font (if my-windows-laptop-p "Calibri"
-                               "Open Sans"))
+(setq my-fixed-pitch-font
+      (if (find-font (font-spec :name "Cascadia Code"))
+          "Cascadia Code"
+        (if my-windows-laptop-p "Consolas" "monospace")))
+
+(setq my-variable-pitch-font
+      (if (find-font (font-spec :name "Noto Sans"))
+          "Noto Sans"
+        (if my-windows-laptop-p "Caibri" "sans-serif")))
 
 (defun my-set-font-faces ()
   "Set font faces."
