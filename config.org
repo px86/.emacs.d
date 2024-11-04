@@ -687,7 +687,7 @@ Enable =company-mode= in =prog-mode=, =text-mode=, and =org-mode= buffers.  Comp
 #+begin_src emacs-lisp
   (use-package company
     :commands (company-mode global-company-mode)
-    :hook (prog-mode text-mode org-mode)
+    :hook ((prog-mode text-mode org-mode) . company-mode)
     :bind
     (:map company-active-map
           ("<tab>" . company-complete-selection))
@@ -703,7 +703,7 @@ The documentation for =flycheck-mode= can be found on their website https://flyc
 #+begin_src emacs-lisp
   (use-package flycheck
     :commands (global-flycheck-mode flycheck-mode)
-    :hook prog-mode)
+    :hook (prog-mode . flycheck-mode))
 #+end_src
 
 ** snippets
@@ -807,7 +807,7 @@ Examples on how to use =emmet-mode= can be found at https://github.com/smihica/e
     (setq web-mode-auto-close-style 2))
 
   (use-package emmet-mode
-    :hook (web-mode css-mode sgml-mode))
+    :hook ((web-mode css-mode sgml-mode) . emmet-mode))
 #+end_src
 
 *** python
@@ -849,7 +849,7 @@ Examples on how to use =emmet-mode= can be found at https://github.com/smihica/e
 
   (use-package pyvenv
     :after python
-    :hook (python-mode python-ts-mode)
+    :hook ((python-mode python-ts-mode) . pyvenv-mode)
     :config
     (add-hook 'pyvenv-mode-hook
               #'my-locate-and-activate-virtual-environment))
@@ -1074,7 +1074,7 @@ Examples on how to use =emmet-mode= can be found at https://github.com/smihica/e
     (use-package olivetti
       :commands olivetti-mode
       :hook
-      (org-mode Info-mode)
+      ((org-mode Info-mode) . olivetti-mode)
       :config
       (set-default 'olivetti-body-width 100)))
 #+end_src

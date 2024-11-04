@@ -476,7 +476,7 @@ and `my-dark-theme'"
 
 (use-package company
   :commands (company-mode global-company-mode)
-  :hook (prog-mode text-mode org-mode)
+  :hook ((prog-mode text-mode org-mode) . company-mode)
   :bind
   (:map company-active-map
         ("<tab>" . company-complete-selection))
@@ -486,7 +486,7 @@ and `my-dark-theme'"
 
 (use-package flycheck
   :commands (global-flycheck-mode flycheck-mode)
-  :hook prog-mode)
+  :hook (prog-mode . flycheck-mode))
 
 (use-package yasnippet
   :requires warnings  ;; for `warning-suppress-types' below
@@ -563,7 +563,7 @@ and `my-dark-theme'"
   (setq web-mode-auto-close-style 2))
 
 (use-package emmet-mode
-  :hook (web-mode css-mode sgml-mode))
+  :hook ((web-mode css-mode sgml-mode) . emmet-mode))
 
 (defun my-locate-virtual-environment-folder (&optional file-name)
   "Check for virtual environment folder in the parent directories of FILE-NAME."
@@ -601,7 +601,7 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
 
 (use-package pyvenv
   :after python
-  :hook (python-mode python-ts-mode)
+  :hook ((python-mode python-ts-mode) . pyvenv-mode)
   :config
   (add-hook 'pyvenv-mode-hook
             #'my-locate-and-activate-virtual-environment))
@@ -773,7 +773,7 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
   (use-package olivetti
     :commands olivetti-mode
     :hook
-    (org-mode Info-mode)
+    ((org-mode Info-mode) . olivetti-mode)
     :config
     (set-default 'olivetti-body-width 100)))
 
