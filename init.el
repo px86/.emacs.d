@@ -71,7 +71,7 @@
 (setq my-variable-pitch-font
       (if (find-font (font-spec :name "Noto Sans"))
           "Noto Sans"
-        (if my-windows-laptop-p "Caibri" "sans-serif")))
+        (if my-windows-laptop-p "Calibri" "sans-serif")))
 
 (defun my-set-font-faces ()
   "Set font faces."
