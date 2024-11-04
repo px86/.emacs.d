@@ -63,8 +63,10 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-(setq my-fixed-pitch-font "CaskaydiaCove Nerd Font")
-(setq my-variable-pitch-font "Open Sans")
+(setq my-fixed-pitch-font (if my-windows-laptop-p "Consolas"
+                            "Cascadia Code"))
+(setq my-variable-pitch-font (if my-windows-laptop-p "Calibri"
+                               "Open Sans"))
 
 (defun my-set-font-faces ()
   "Set font faces."
