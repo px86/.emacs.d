@@ -429,11 +429,11 @@ and `my-dark-theme'"
    '(("d" "default" plain "%?"
       :target
       (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n\n")
-      :unnarrowed t))
-   ("f" "fleeting" plain "%?"
-    :target
-    (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE: ${title}\n#+FILETAGS: :fleeting:\n")
-    :unnarrowed t))
+      :unnarrowed t)
+     ("f" "fleeting" plain "%?"
+      :target
+      (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE: ${title}\n#+FILETAGS: :fleeting:\n")
+      :unnarrowed t)))
   :bind (("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
          ("C-c n l" . org-roam-buffer-toggle)
