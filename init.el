@@ -635,6 +635,7 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
   :after lsp-mode)
 
 (use-package java-ts-mode
+  :if (not my-windows-laptop-p)
   :config
   (setq java-ts-mode-indent-offset 2))
 
