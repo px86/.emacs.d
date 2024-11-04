@@ -303,6 +303,8 @@ Keep the emacs directory clean, and put all backup files in a single place.
   (use-package dashboard
     :config
     (dashboard-setup-startup-hook)
+    (if my-windows-laptop-p
+        (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg)))
     :init
     (setq dashboard-startup-banner 'logo)
     (setq dashboard-center-content t)
@@ -313,9 +315,7 @@ Keep the emacs directory clean, and put all backup files in a single place.
     (setq dashboard-projects-backend 'project-el)
     (setq dashboard-items '((recents  . 3)
                             (projects . 5)
-                            (registers . 3)))
-    (if my-windows-laptop-p
-        (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg))))
+                            (registers . 3))))
 #+end_src
 
 * Completion system

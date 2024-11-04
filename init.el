@@ -192,6 +192,8 @@ and `my-dark-theme'"
 (use-package dashboard
   :config
   (dashboard-setup-startup-hook)
+  (if my-windows-laptop-p
+      (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg)))
   :init
   (setq dashboard-startup-banner 'logo)
   (setq dashboard-center-content t)
@@ -202,9 +204,7 @@ and `my-dark-theme'"
   (setq dashboard-projects-backend 'project-el)
   (setq dashboard-items '((recents  . 3)
                           (projects . 5)
-                          (registers . 3)))
-  (if my-windows-laptop-p
-      (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg))))
+                          (registers . 3))))
 
 (use-package savehist
   :config
