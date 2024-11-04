@@ -634,10 +634,10 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
 (use-package lsp-java
   :after lsp-mode)
 
-(use-package java-ts-mode
-  :if (not my-windows-laptop-p)
-  :config
-  (setq java-ts-mode-indent-offset 2))
+(if (not my-windows-laptop-p)
+    (use-package java-ts-mode
+      :config
+      (setq java-ts-mode-indent-offset 2)))
 
 (use-package eglot-java
   :disabled t

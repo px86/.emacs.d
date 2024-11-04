@@ -896,10 +896,10 @@ Examples on how to use =emmet-mode= can be found at https://github.com/smihica/e
 #+end_src
 
 #+begin_src emacs-lisp
-  (use-package java-ts-mode
-    :if (not my-windows-laptop-p)
-    :config
-    (setq java-ts-mode-indent-offset 2))
+  (if (not my-windows-laptop-p)
+      (use-package java-ts-mode
+        :config
+        (setq java-ts-mode-indent-offset 2)))
 
   (use-package eglot-java
     :disabled t
