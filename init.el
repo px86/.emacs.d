@@ -63,15 +63,22 @@
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-(setq my-fixed-pitch-font
-      (if (find-font (font-spec :name "Cascadia Code"))
-          "Cascadia Code"
-        (if my-windows-laptop-p "Consolas" "monospace")))
+(defvar my-fixed-pitch-font "monospace"
+  "Defines a fixed width font.")
 
-(setq my-variable-pitch-font
-      (if (find-font (font-spec :name "Noto Sans"))
-          "Noto Sans"
-        (if my-windows-laptop-p "Calibri" "sans-serif")))
+(defvar my-variable-pitch-font "sans-serif"
+  "Defines a proportional width font.")
+
+(defun my-set-font-variables ()
+  "Set `my-fixed-pitch-font' and `my-variable-pitch-font'."
+  (setq my-fixed-pitch-font
+        (if (find-font (font-spec :name "Cascadia Code"))
+            "Cascadia Code"
+          (if my-windows-laptop-p "Consolas" "monospace")))
+  (setq my-variable-pitch-font
+        (if (find-font (font-spec :name "Noto Sans"))
+            "Noto Sans"
+          (if my-windows-laptop-p "Calibri" "sans-serif"))))
 
 (defun my-set-font-faces ()
   "Set font faces."
@@ -89,6 +96,7 @@
                       :font my-variable-pitch-font
                       :height 1.0))
 
+(my-set-font-variables)
 (my-set-font-faces)
 
 (global-set-key (kbd "M-SPC")
@@ -929,7 +937,9 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
     (set-frame-parameter frame 'undecorated (not visibility))))
 
 (add-hook 'server-after-make-frame-hook
-          #'my-set-font-faces)
+          (lambda ()
+            (my-set-font-variables)
+            (my-set-font-faces)))
 
 ;; Lower the GC threshold, again
 (setq gc-cons-threshold 16000000)
