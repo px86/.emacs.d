@@ -85,7 +85,7 @@
   (set-face-attribute 'default nil
                       :font my-fixed-pitch-font
                       :weight 'normal
-                      :height 110)
+                      :height 105)
 
   (set-face-attribute 'fixed-pitch nil
                       :font my-fixed-pitch-font
@@ -164,7 +164,7 @@
   (setq nerd-icons-scale-factor 1.25))
 
 (defvar my-light-theme 'doom-solarized-light)
-(defvar my-dark-theme 'doom-ir-black)
+(defvar my-dark-theme 'doom-rouge)
 (defvar my-current-theme-variant 'dark)
 
 (defun my-toggle-theme ()
