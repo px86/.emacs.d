@@ -116,9 +116,9 @@ Bury buffers in =my-buffers-to-bury= instead of killing. Kill other buffers imme
 Make the frame a little transparent on my =GNU/Linux= laptop.
 
 #+begin_src emacs-lisp
-  ;; (when my-gnu/linux-laptop-p
-  ;;   (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
-  ;;   (add-to-list 'default-frame-alist `(alpha . (95 . 95))))
+  (when my-gnu/linux-laptop-p
+    (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+    (add-to-list 'default-frame-alist `(alpha . (95 . 95))))
 #+end_src
 
 ** maximize frame by default
@@ -271,7 +271,7 @@ Keep the emacs directory clean, and put all backup files in a single place.
 
 #+begin_src emacs-lisp
   (defvar my-light-theme 'doom-solarized-light)
-  (defvar my-dark-theme 'doom-rouge)
+  (defvar my-dark-theme 'doom-ir-black)
   (defvar my-current-theme-variant 'dark)
 
   (defun my-toggle-theme ()
@@ -987,6 +987,18 @@ Examples on how to use =emmet-mode= can be found at https://github.com/smihica/e
 
 #+end_src
 
+*** clojure
+
+#+begin_src emacs-lisp
+  (use-package clojure-ts-mode
+    :ensure t)
+
+  (use-package cider
+    :ensure t
+    :config
+    (setq cider-repl-display-help-banner nil))
+#+end_src
+
 *** golang
 
 #+begin_src emacs-lisp
@@ -1005,6 +1017,7 @@ Examples on how to use =emmet-mode= can be found at https://github.com/smihica/e
     :hook
     (prog-mode . format-all-ensure-formatter)
     (python-ts-mode . format-all-mode)
+    (clojure-ts-mode . format-all-mode)
     :config
     (setq-default format-all-formatters
                   '(("C" (clang-format "-style=file"))

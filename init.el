@@ -57,9 +57,9 @@
 
 (global-set-key (kbd "C-x k") 'my-kill-current-buffer)
 
-;; (when my-gnu/linux-laptop-p
-;;   (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
-;;   (add-to-list 'default-frame-alist `(alpha . (95 . 95))))
+(when my-gnu/linux-laptop-p
+  (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+  (add-to-list 'default-frame-alist `(alpha . (95 . 95))))
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -164,7 +164,7 @@
   (setq nerd-icons-scale-factor 1.25))
 
 (defvar my-light-theme 'doom-solarized-light)
-(defvar my-dark-theme 'doom-rouge)
+(defvar my-dark-theme 'doom-ir-black)
 (defvar my-current-theme-variant 'dark)
 
 (defun my-toggle-theme ()
@@ -718,6 +718,14 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
 (add-hook 'java-mode-hook #'(lambda () (local-set-key (kbd "C-c l f") #'my-format-java-buffer)))
 (add-hook 'java-ts-mode-hook #'(lambda () (local-set-key (kbd "C-c l f") #'my-format-java-buffer)))
 
+(use-package clojure-ts-mode
+  :ensure t)
+
+(use-package cider
+  :ensure t
+  :config
+  (setq cider-repl-display-help-banner nil))
+
 (use-package go-ts-mode
   :ensure nil
   :mode "\\.go\\'"
@@ -729,6 +737,7 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
   :hook
   (prog-mode . format-all-ensure-formatter)
   (python-ts-mode . format-all-mode)
+  (clojure-ts-mode . format-all-mode)
   :config
   (setq-default format-all-formatters
                 '(("C" (clang-format "-style=file"))
