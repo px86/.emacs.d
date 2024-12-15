@@ -580,46 +580,13 @@ and `my-dark-theme'"
 (use-package emmet-mode
   :hook ((web-mode css-mode sgml-mode) . emmet-mode))
 
-(defun my-locate-virtual-environment-folder (&optional file-name)
-  "Check for virtual environment folder in the parent directories of FILE-NAME."
-  (let ((venv-names '(".venv" "venv"))
-        (file-name (or file-name (buffer-file-name)))
-        (venv-dir nil)
-        try)
-    (while (and venv-names (not venv-dir))
-      (setq try (locate-dominating-file file-name (car venv-names)))
-      (when try
-        (if (file-directory-p (concat try (car venv-names)))
-            (setq venv-dir (concat try (car venv-names)))))
-      (setq venv-names (cdr venv-names)))
-    venv-dir))
-
-(defun my-locate-and-activate-virtual-environment (&optional file-name)
-  "Locate and activate virtual environment folder for FILE-NAME.
-
-If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
-  (interactive)
-  (let* ((file-name (or file-name (buffer-file-name)))
-         (venv-dir (my-locate-virtual-environment-folder file-name)))
-    (if venv-dir
-        (progn (message "Activating virtual environment: '%s'" venv-dir)
-               (pyvenv-activate venv-dir)
-               venv-dir)
-      (message "Unable to find virtual environment for '%s'" file-name)
-      nil)))
-
-
 (use-package python
   :interpreter
   ("python" . python-mode)
   ("python3" . python-mode))
 
 (use-package pyvenv
-  :after python
-  :hook ((python-mode python-ts-mode) . pyvenv-mode)
-  :config
-  (add-hook 'pyvenv-mode-hook
-            #'my-locate-and-activate-virtual-environment))
+  :disabled t)
 
 (use-package js
   :interpreter "node"
@@ -642,7 +609,7 @@ If nil, FILE-NAME defaults to the return value of function `buffer-file-name'."
             (company-mode)))
 
 (use-package lsp-java
-  :after lsp-mode)
+  :hook (java-mode . lsp-java))
 
 (if (not my-windows-laptop-p)
     (use-package java-ts-mode
