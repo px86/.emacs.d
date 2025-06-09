@@ -1,1 +1,2 @@
-snippets/ linguist-generated
+snippets/* linguist-vendored
+snippets/**/* linguist-vendored
