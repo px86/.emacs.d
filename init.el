@@ -58,8 +58,8 @@
 (global-set-key (kbd "C-x k") 'my-kill-current-buffer)
 
 (when my-gnu/linux-laptop-p
-  (set-frame-parameter (selected-frame) 'alpha '(95 . 95))
-  (add-to-list 'default-frame-alist `(alpha . (95 . 95))))
+  (set-frame-parameter (selected-frame) 'alpha-background 90)
+  (add-to-list 'default-frame-alist `(alpha-background . 90)))
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -85,7 +85,7 @@
   (set-face-attribute 'default nil
                       :font my-fixed-pitch-font
                       :weight 'normal
-                      :height 105)
+                      :height 110)
 
   (set-face-attribute 'fixed-pitch nil
                       :font my-fixed-pitch-font
@@ -114,15 +114,17 @@
       (set-register key `(file . ,filename))))
 
 (my-set-register-if-file-exists ?E
-                                (concat (file-name-as-directory user-emacs-directory)
-                                        "config.org"))
-
-(when my-gnu/linux-laptop-p
-  (my-set-register-if-file-exists ?Q "~/.config/qtile/config.py")
-  (my-set-register-if-file-exists ?B "~/.local/data/bookmarks"))
-
-(when my-windows-laptop-p
-  (my-set-register-if-file-exists ?B "~/bookmarks.txt"))
+      			  (concat (file-name-as-directory user-emacs-directory)
+      				  "config.org"))
+(cond
+ (my-gnu/linux-laptop-p
+  (my-set-register-if-file-exists ?B "~/.local/data/bookmarks")
+  (my-set-register-if-file-exists ?H "~/.config/hypr/hyland.conf")
+  (my-set-register-if-file-exists ?K "~/.config/hypr/keybindings.conf")
+  (my-set-register-if-file-exists ?W "~/.config/waybar/config")
+  (my-set-register-if-file-exists ?G "~/src/repos/px86/README.org"))
+ (my-windows-laptop-p
+  (my-set-register-if-file-exists ?B "~/bookmarks.txt")))
 
 (global-unset-key (kbd "C-z"))
 
@@ -163,39 +165,56 @@
   :config
   (setq nerd-icons-scale-factor 1.25))
 
-(defvar my-light-theme 'doom-solarized-light)
-(defvar my-dark-theme 'doom-ir-black)
-(defvar my-current-theme-variant 'dark)
-
-(defun my-toggle-theme ()
-  "Toggle between light and dark themes, set by variables `my-light-theme'
-and `my-dark-theme'"
-  (interactive)
-  (if (eq my-current-theme-variant 'dark)
-      (progn
-        (disable-theme my-dark-theme)
-        (load-theme my-light-theme t)
-        (setq my-current-theme-variant 'light))
-    (disable-theme my-light-theme)
-    (load-theme my-dark-theme t)
-    (setq my-current-theme-variant 'dark))
-  (message "OK: %s theme activated" (symbol-name my-current-theme-variant)))
+(use-package ef-themes
+  :ensure t
+  :config
+  (setq ef-themes-to-toggle '(ef-arbutus ef-dark)))
 
 (use-package doom-themes
+  :ensure t
   :config
   (setq doom-themes-enable-bold t)
   (setq doom-themes-enable-italic t)
-  (load-theme (if (eq my-current-theme-variant 'dark)
-                  my-dark-theme
-                my-light-theme) t)
-  (set-face-attribute 'font-lock-comment-face  nil
-                      :slant 'italic))
+  (load-theme 'doom-ir-black t))
+
+(defun my-disable-all-loaded-themes ()
+  "Disable all loaded themes."
+  (interactive)
+  (dolist (theme custom-enabled-themes)
+    (message "Disabling `%s' theme" theme)
+    (disable-theme theme)))
+
+(defvar my-preferred-light-theme 'doom-gruvbox-light
+  "Preferred light theme.")
+
+(defvar my-preferred-dark-theme 'doom-ir-black
+  "Preferred dark theme.")
+
+(defun my-set-theme-variant (variant)
+  "Set light or dark theme variant."
+  (let ((theme (if (eq variant 'light) my-preferred-light-theme
+                  my-preferred-dark-theme)))
+    (my-disable-all-loaded-themes)
+    (load-theme theme t nil)))
+
+(defun my-load-theme (theme)
+  "Load given theme after disabling all loaded themes."
+  (my-disable-all-loaded-themes)
+  (load-theme theme t nil))
 
 (use-package doom-modeline
+  :ensure t
   :config
   (setq doom-modeline-icon t)
-  (setq doom-modeline-height 12))
-  (doom-modeline-mode 1)
+  (setq doom-modeline-height 12)
+  (doom-modeline-mode 1))
+
+(use-package spacious-padding
+  :ensure t
+  :init
+  (setq spacious-padding-subtle-mode-line nil)
+  :config
+  (spacious-padding-mode -1))
 
 (use-package dashboard
   :config
@@ -206,13 +225,14 @@ and `my-dark-theme'"
   (setq dashboard-startup-banner 'logo)
   (setq dashboard-center-content t)
   (setq dashboard-set-heading-icons t)
-  (setq dashboard-icon-type 'all-the-icons)
+  (setq dashboard-icon-type 'nerd-icons)
   (setq dashboard-set-file-icons t)
   (setq dashboard-set-init-info t)
   (setq dashboard-projects-backend 'project-el)
-  (setq dashboard-items '((recents  . 3)
+  (setq dashboard-items '((recents  . 5)
                           (projects . 5)
-                          (registers . 3))))
+                          ;; (agenda . 3)
+                          (registers . 5))))
 
 (use-package savehist
   :config
@@ -242,62 +262,85 @@ and `my-dark-theme'"
   (marginalia-mode))
 
 (use-package ace-window
+  :ensure t
   :bind ("M-o" . ace-window)
   :config
-  (set-face-attribute 'aw-leading-char-face nil
-                      :font my-fixed-pitch-font
-                      :weight 'bold
-                      :slant 'normal
-                      :foreground "yellow"
-                      :height 200)
-  :custom
-  (aw-keys '(?j ?k ?l ?f ?g ?h ?a ?s ?d ?i ?e ?n ?m)))
+  (setq aw-keys '(?h ?j ?k ?l ?y ?u ?i ?o ?p))
+  (setq aw-display-mode-overlay t)
+  (setq aw-background t)
+  (setq aw-dispatch-always t)
+  (setq aw-minibuffer-flag t)
+  (setq aw-dispatch-alist
+        '((?s aw-swap-window "Swap Windows")
+          (?0 aw-delete-window "Delete Window")
+          (?2 aw-split-window-vert "Split Vert Window")
+          (?3 aw-split-window-horz "Split Horz Window")
+          (?b aw-switch-buffer-in-window "Select Buffer")
+          (?? aw-show-dispatch-help "Show Dispatch Help"))))
 
 (winner-mode)
 
 (setq split-height-threshold nil)
 (setq split-width-threshold 145)
 
-;; (setq display-buffer-alist
-;;       `((,(concat "\\*.*"
-;;                   "\\(Backtrace"
-;;                   "\\|Compile-Log"
-;;                   "\\|compilation"
-;;                   "\\|Warnings"
-;;                   "\\|Compile-Log"
-;;                   "\\|compilation"
-;;                   "\\|Calendar"
-;;                   "\\|Flycheck"
-;;                   "\\|Flymake"
-;;                   "\\|vterm"
-;;                   "\\).*\\*")
-;;          (display-buffer-in-side-window)
-;;          (window-height . 0.25)
-;;          (side . bottom))))
-
 (setq display-buffer-alist
-      `((,(concat "\\*.*"
-                  "\\(Backtrace"
-                  "\\|Compile-Log"
-                  "\\|compilation"
-                  "\\|Warnings"
-                  "\\|Compile-Log"
-                  "\\|compilation"
-                  "\\|Calendar"
-                  "\\|Flycheck"
-                  "\\|Flymake"
-                  "\\|vterm"
-                  "\\).*\\*")
+      `(((derived-mode . compilation-mode)
+         (display-buffer-reuse-window display-buffer-below-selected)
+         (dedicated . t)
+         (preserve-size (nil . t))
+         (window-height . fit-window-to-buffer))
+
+        ;; ;; no window
+        ;; ("\\`\\*Async Shell Command\\*\\'"
+        ;;  (display-buffer-no-window))
+        ("\\`\\*\\(Warnings\\|Compile-Log\\|Org Links\\)\\*\\'"
+         (display-buffer-no-window)
+         (allow-no-window . t))
+
+        ;; bottom side window
+        ;; the `org-capture' key selection and `org-add-log-note'
+        ("\\*\\(Org \\(Select\\|Note\\)\\|Agenda Commands\\)\\*"
          (display-buffer-in-side-window)
-         (window-width . 0.40)
-         (side . right))))
+         (dedicated . t)
+         (side . bottom)
+         (slot . 0)
+         (window-parameters . ((mode-line-format . none))))
+
+        ;; bottom buffer (NOT side window)
+        ((or . ((derived-mode . flymake-diagnostics-buffer-mode)
+                (derived-mode . flymake-project-diagnostics-mode)
+                (derived-mode . messages-buffer-mode)
+                (derived-mode . backtrace-mode)))
+         (display-buffer-reuse-mode-window display-buffer-at-bottom)
+         (window-height . 0.3)
+         (dedicated . t)
+         (preserve-size . (t . t)))
+
+        ("\\*\\(Output\\|Register Preview\\).*"
+         (display-buffer-reuse-mode-window display-buffer-at-bottom))
+
+        ;; below current window
+        ("\\(\\*Capture\\*\\|CAPTURE-.*\\)"
+         (display-buffer-reuse-mode-window display-buffer-below-selected))
+
+        ((derived-mode . reb-mode) ; M-x re-builder
+         (display-buffer-reuse-mode-window display-buffer-below-selected)
+         (window-height . 4) ; note this is literal lines, not relative
+         (dedicated . t)
+         (preserve-size . (t . t)))
+
+        ("\\*\\(Calendar\\|Bookmark Annotation\\|ert\\).*"
+         (display-buffer-reuse-mode-window display-buffer-below-selected)
+         (dedicated . t)
+         (window-height . fit-window-to-buffer))))
 
 (setq-default window-divider-default-places t)
 (setq-default window-divider-default-bottom-width 2)
 (setq-default window-divider-default-right-width 2)
 (window-divider-mode t)
 (set-face-attribute 'window-divider nil
-                    :foreground "#b16e75")
+                    :foreground "#BE56D6")
+                    ;; :foreground "#b16e75")
 
 (defun my-org-font-face-setup ()
   "Set necessary font faces in `org-mode'."
@@ -337,83 +380,110 @@ and `my-dark-theme'"
   :hook
   (org-mode . (lambda ()
                 (my-org-font-face-setup)
-                (if my-gnu/linux-laptop-p (flyspell-mode))
+                ;; (if my-gnu/linux-laptop-p (flyspell-mode))
                 (org-indent-mode)
                 (visual-line-mode 1)))
   :init
-  (if my-android-phone-p
-      (setq org-directory "~/storage/Org")
-    (setq org-directory "~/Org"))
+  (setq org-directory (cond (my-android-phone-p "~/storage/org")
+                            (my-windows-laptop-p "~/org")
+                            (my-gnu/linux-laptop-p "~/docs/org")
+                            ("~/org")))
   :custom
   (org-ellipsis " ▾")
-  (org-hide-emphasis-markers t)
+  (org-hide-emphasis-markers nil)
   (org-startup-folded 'overview)
   :config
-  (require 'org-habit)
-  (add-to-list 'org-modules 'org-habit)
-  (setq org-habit-graph-column 60)
+  ;; (require 'org-habit)
+  ;; (add-to-list 'org-modules 'org-habit)
+  ;; (setq org-habit-graph-column 60)
   (advice-add 'org-refile
               :after 'org-save-all-org-buffers)
 
   ;; Add a clock sound for `org-timer-set-timer'
   (let ((sound-file "~/.local/data/bell.wav"))
     (if (file-exists-p sound-file)
-        (setq org-clock-sound sound-file))))
+        (setq org-clock-sound sound-file)))
+
+  ;; org-agenda
+  (setq org-agenda-files (list (expand-file-name "tasks.org" org-directory)))
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "INTR(i)" "WAIT(w@/!)" "|" "DONE(x!)" "NULL(k@)")))
+  (setq org-todo-keyword-faces
+        '(("TODO" . "royal blue")
+          ("NEXT" . "sea green")
+          ("PROG" . "yellow green")
+          ("INTR" . "purple1")
+          ("WAIT" . "violet red")))
+  (setq org-enforce-todo-dependencies t)
+  (setq org-track-ordered-property-with-tag t)
+  (setq org-agenda-dim-blocked-tasks t)
+  (setq org-priority-highest 1)
+  (setq org-priority-lowest 10)
+  (setq org-priority-default 5))
+
+(global-set-key (kbd "C-c a") #'org-agenda)
 
 (global-set-key (kbd "C-c c") #'org-capture)
 
 (setq org-capture-templates
-      `( ("t" "Todo item" entry
-          (file+headline "inbox.org" "Tasks")
-          ,(concat "* %^{|TODO|BLOG|SOMEDAY} %^{Title}\n"
-                   ":PROPERTIES:\n"
-                   ":CREATED: %U\n"
-                   ":END:\n"
-                   "Note: %?\n"))
+      `(("t" "Todo item" entry
+         (file+headline "tasks.org" "Inbox")
+         ,(concat "* TODO %^{Title}\n"
+                  ":PROPERTIES:\n"
+                  ":ID: %(org-id-uuid)\n"
+                  ":CREATED: %U\n"
+                  ":END:\n")
+         :prepend t)
 
-         ("i" "Project idea" entry
-          (file+headline "inbox.org" "Project Ideas")
-          ,(concat "* PROJECT %^{Title}\n"
-                   ":PROPERTIES:\n"
-                   ":CREATED: %U\n"
-                   ":END:\n"
-                   "Note: %?\n"))
+        ("u" "Urgent todo item" entry
+         (file+headline "tasks.org" "Inbox")
+         ,(concat "* TODO [#1] %^{Title}\n"
+                  "DEADLINE: %t\n"
+                  ":PROPERTIES:\n"
+                  ":ID: %(org-id-uuid)\n"
+                  ":CREATED: %U\n"
+                  ":END:\n")
+         :prepend t)
 
-         ("n" "Quick note" entry
-          (file+headline "inbox.org" "Quick Notes")
-          ,(concat "* %^{Title}\n"
-                   ":PROPERTIES:\n"
-                   ":CREATED: %U\n"
-                   ":END:\n"
-                   "Note: %?")
-          :empty-lines-after 1)
+        ("r" "Web article to read" entry
+         (file+headline "tasks.org" "Reading list")
+         ,(concat "* TODO %^{Description}\n"
+                  ":PROPERTIES:\n"
+                  ":ID: %(org-id-uuid)\n"
+                  ":CREATED: %U\n"
+                  ":TOPIC: %^{Topic}\n"
+                  ":END:\n"
+                  "URL: %(current-kill 0)\n"
+                  "Note: %?\n")
+         :empty-lines-after 1)
 
-         ("r" "Reading list item" entry
-          (file+headline "inbox.org" "Reading List")
-          ,(concat "* READ %^{Description}\n"
-                   ":PROPERTIES:\n"
-                   ":CREATED: %U\n"
-                   ":TOPIC: %^{Topic}\n"
-                   ":END:\n"
-                   "URL: %(current-kill 0)\n"
-                   "Note: %?\n")
-          :empty-lines-after 1)))
+        ("n" "Quick note" entry
+         (file+headline "tasks.org" "Notes")
+         ,(concat "* %^{Title}\n"
+                  ":PROPERTIES:\n"
+                  ":ID: %(org-id-uuid)\n"
+                  ":CREATED: %U\n"
+                  ":END:\n"
+                  "\n%?")
+         :empty-lines-after 1)
 
-(global-set-key (kbd "C-c a") #'org-agenda)
-
-(setq org-agenda-files (list (expand-file-name "inbox.org" org-directory)))
-(setq org-agenda-start-with-log-mode t)
-(setq org-log-done 'time)
-(setq org-log-into-drawer t)
-(setq org-todo-keywords
-      '((sequence "TODO(t)" "SOMEDAY(s)" "|" "DONE(x!)")
-        (sequence "READ(r)" "BLOG(b)" "PROJECT(p)" "|" "DONE(x!)")))
-
-(setq org-enforce-todo-dependencies t)
-(setq org-track-ordered-property-with-tag t)
-(setq org-agenda-dim-blocked-tasks t)
-
-
+        ("p" "New project" entry
+         (file+headline "tasks.org" "Projects")
+         ,(concat "* %^{Name}\n"
+                  ":PROPERTIES:\n"
+                  ":ID: %(org-id-uuid)\n"
+                  ":CREATED: %U\n"
+                  ":END:\n\n"
+                  "** Objective\n%?\n"
+                  "** Motivation\n"
+                  "** Technologies\n"
+                  "** Schedules\n"
+                  "** Notes\n"
+                  "** Progress [/]\n")
+         :empty-lines-after 1)))
 
 (use-package org-bullets
   :hook (org-mode . org-bullets-mode)
@@ -437,20 +507,11 @@ and `my-dark-theme'"
 (setq org-confirm-babel-evaluate nil)
 
 (use-package org-roam
-  :init
-  (setq org-roam-directory (expand-file-name "Roam" org-directory))
-  :custom
-  (org-roam-dailies-directory "Journal/")
-  (org-roam-db-location "~/.cache/org-roam.db")
-  (org-roam-capture-templates
-   '(("d" "default" plain "%?"
-      :target
-      (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n\n")
-      :unnarrowed t)
-     ("f" "fleeting" plain "%?"
-      :target
-      (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE: ${title}\n#+FILETAGS: :fleeting:\n")
-      :unnarrowed t)))
+  :commands (org-roam-node-find
+             org-roam-node-insert
+             org-roam-dailies-capture-today
+             org-roam-dailies-goto-today
+             org-roam-dailies-goto-date)
   :bind (("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
          ("C-c n l" . org-roam-buffer-toggle)
@@ -461,12 +522,22 @@ and `my-dark-theme'"
          ("T" . org-roam-dailies-capture-tomorrow))
   :bind-keymap
   ("C-c n d" . org-roam-dailies-map)
+  :init
+  (setq org-roam-directory (expand-file-name "roam" org-directory))
   :config
   (require 'org-roam-dailies)
-  (org-roam-db-autosync-enable))
+  (org-roam-db-autosync-enable)
+  (setq org-roam-dailies-directory "dailies/")
+  (setq org-roam-db-location "~/.cache/org-roam.db"))
+
+(when my-gnu/linux-laptop-p
+  (use-package vterm
+    :ensure t))
 
 (use-package editorconfig
   :ensure t)
+
+(keymap-global-set "<f5>" #'recompile)
 
 (setq-default c-basic-offset 2)
 (setq-default indent-tabs-mode nil)
@@ -500,6 +571,7 @@ and `my-dark-theme'"
   (setq company-idle-delay 0.2))
 
 (use-package flycheck
+  :disabled t
   :commands (global-flycheck-mode flycheck-mode)
   :hook (prog-mode . flycheck-mode))
 
@@ -512,35 +584,32 @@ and `my-dark-theme'"
   (yas-global-mode 1)
   (yas-reload-all))
 
+(setq treesit-extra-load-path '("~/.local/lib/"))
+
 (use-package eglot
-  :disabled t
-  :ensure nil
+  ;; :disabled t
+  :ensure t
   :commands eglot
   :autoload eglot-ensure
+  :bind
+  (:map eglot-mode-map
+        ("C-c l r" . eglot-rename)
+        ("C-c l =" . eglot-format))
   :config
   (fset #'jsonrpc--log-event #'ignore)
-  (setq eglot-events-buffer-size 0)
+  ;; (setq eglot-events-buffer-size 0)
   (setq eglot-sync-connect nil)
   (setq eglot-connect-timeout nil)
   (setq eglot-autoshutdown t)
   (setq eglot-send-changes-idle-time 3)
   (setq eglot-ignored-server-capabilities '( :documentHighlightProvider)))
 
-;; exclude modes from eglot
-;; (defun maybe-start-eglot ()
-;;   "Exlude some mode from eglot."
-;;   (let ((disabled-modes '(emacs-lisp-mode dockerfile-ts-mode)))
-;;     (unless (apply 'derived-mode-p disabled-modes)
-;;       (eglot-ensure))))
-
-;; (add-hook 'prog-mode-hook #'maybe-start-eglot)
-
 (use-package lsp-mode
-  ;; :disabled t
+  :disabled t
   :commands
   (lsp lsp-deferred)
   :hook
-  ((java-mode java-ts-mode python-mode python-ts-mode go-mode) . lsp)
+  ((java-mode java-ts-mode python-mode python-ts-mode go-ts-mode) . lsp)
   :init
   (setq lsp-headerline-breadcrumb-enable 'nil)
   (setq lsp-keymap-prefix "C-c l")
@@ -556,8 +625,12 @@ and `my-dark-theme'"
                   "--header-insertion-decorators=0")))
 
 (use-package lsp-ui
-  ;; :disabled t
+  :disabled t
   :after lsp-mode)
+
+(use-package dape
+  :ensure t
+  :commands (dape))
 
 (use-package multiple-cursors
   :bind
@@ -586,7 +659,8 @@ and `my-dark-theme'"
   ("python3" . python-mode))
 
 (use-package pyvenv
-  :disabled t)
+  :config
+  (pyvenv-mode))
 
 (use-package js
   :interpreter "node"
@@ -596,6 +670,7 @@ and `my-dark-theme'"
   (setq js-indent-level 2))
 
 (use-package typescript-mode
+  :disabled t
   :mode "\\.ts\\'"
   :config
   (setq typescript-indent-level 2))
@@ -609,10 +684,12 @@ and `my-dark-theme'"
             (company-mode)))
 
 (use-package lsp-java
+  :disabled t
   :hook (java-mode . lsp-java))
 
 (if (not my-windows-laptop-p)
     (use-package java-ts-mode
+      :commands (java-ts-mode)
       :config
       (setq java-ts-mode-indent-offset 2)))
 
@@ -685,18 +762,39 @@ and `my-dark-theme'"
 (add-hook 'java-mode-hook #'(lambda () (local-set-key (kbd "C-c l f") #'my-format-java-buffer)))
 (add-hook 'java-ts-mode-hook #'(lambda () (local-set-key (kbd "C-c l f") #'my-format-java-buffer)))
 
-(use-package clojure-ts-mode
-  :ensure t)
+(if my-gnu/linux-laptop-p
+    (use-package clojure-ts-mode
+      :commands (clojure-ts-mode)
+      :ensure t)
+  (use-package clojure-mode
+    :commands (clojure-mode)
+    :ensure t))
 
 (use-package cider
+  :commands (cider cider-jack-in cider-jack-in-clj cider-jack-in-cljs)
   :ensure t
   :config
   (setq cider-repl-display-help-banner nil))
 
-(use-package go-ts-mode
-  :ensure nil
-  :mode "\\.go\\'"
-  :hook (go-ts-mode . format-all-mode))
+(if my-gnu/linux-laptop-p
+    (use-package go-ts-mode
+      :ensure nil
+      :mode "\\.go\\'"
+      :hook (go-ts-mode . format-all-mode))
+  (use-package go-mode
+    :ensure t
+    :mode "\\.go\\'"
+    :hook (go-mode . format-all-mode)))
+
+(if my-gnu/linux-laptop-p
+    (use-package rust-ts-mode
+      :ensure nil
+      :mode "\\.rs\\'"
+      :hook (rust-ts-mode . format-all-mode))
+  (use-package rust-mode
+    :ensure t
+    :mode "\\.rs\\'"
+    :hook (rust-mode . format-all-mode)))
 
 (use-package format-all
   :commands (format-all-buffer format-all-region format-all-mode)
@@ -767,7 +865,7 @@ and `my-dark-theme'"
     :hook
     ((org-mode Info-mode) . olivetti-mode)
     :config
-    (set-default 'olivetti-body-width 100)))
+    (set-default 'olivetti-body-width 120)))
 
 (use-package elfeed
   :hook
@@ -850,60 +948,11 @@ and `my-dark-theme'"
 
   (global-set-key (kbd "s-t") #'my-launch-terminal))
 
-(defun my-normalize-string-for-filename (string)
-  "Downcase and remove special charactes from string."
-  (downcase (string-join
-             (split-string string
-                           "[] ~!@#$%^&*()+={}[\\|/;:,.'\"<>?]+" t "[ _-]") "-")))
-
-(defun my-filter-list (predicate list)
-  "Filter LIST items through the PREDICATE function."
-  (let ((newlist '()))
-    (dolist (item list)
-      (if (funcall predicate item)
-          (push item newlist)))
-    newlist))
-
-
-(defvar my-full-name "Pushkar Raj" "My full name")
-(defvar my-email "px86@protonmail.com" "My email address.")
-(defvar my-blog-dir
-  (expand-file-name "~/Programming/repos/px86.github.io")
-  "My blog's root directory.")
-
-(defun my-new-blog-post ()
-  "Create a new blog post."
-  (interactive)
-  (let* ((folder (completing-read "Select blog subfolder: "
-                                  (my-filter-list
-                                   (lambda (f)
-                                     (and (file-directory-p f)
-                                          (not (member (file-name-base f)
-                                                       '("." ".." "assets")))))
-                                   (directory-files (expand-file-name "source" my-blog-dir) t))
-                                  nil t))
-         (title (read-string (format "[%s] Title: " (file-name-base folder))))
-         (subtitle (read-string "Subtitle: " ))
-         (filename (concat (my-normalize-string-for-filename title) ".org"))
-         (filepath (expand-file-name filename folder)))
-    (if (file-exists-p filepath)
-        "Error: Oops! file already exists"
-      (find-file filepath)
-      (insert (format
-               (concat
-                "#+TITLE: %s\n"
-                "#+SUBTITLE: %s\n"
-                "#+AUTHOR: %s\n"
-                "#+EMAIL: %s\n"
-                "#+DATE: %s\n\n")
-               title
-               subtitle
-               my-full-name
-               my-email
-               (format-time-string "[%Y-%m-%d %a]"))))))
-
 (setq initial-buffer-choice
-      (lambda () (get-buffer "*dashboard*")))
+      (lambda () (let* ((buf (get-buffer "*dashboard*")))
+                   (with-current-buffer buf
+                     (revert-buffer))
+                   buf)))
 
 (defun my-toggle-titlebar ()
   "Toggle titlebar from selected frame."
