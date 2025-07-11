@@ -175,7 +175,7 @@
   :config
   (setq doom-themes-enable-bold t)
   (setq doom-themes-enable-italic t)
-  (load-theme 'doom-ir-black t))
+  (load-theme 'doom-solarized-dark-high-contrast t))
 
 (defun my-disable-all-loaded-themes ()
   "Disable all loaded themes."
