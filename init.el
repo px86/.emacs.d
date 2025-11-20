@@ -61,43 +61,48 @@
   (set-frame-parameter (selected-frame) 'alpha-background 90)
   (add-to-list 'default-frame-alist `(alpha-background . 90)))
 
+  ;; (when my-gnu/linux-laptop-p
+  ;;   (set-frame-parameter (selected-frame) 'alpha-background 100)
+  ;;   (add-to-list 'default-frame-alist `(alpha-background . 100)))
+
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-(defvar my-fixed-pitch-font "monospace"
-  "Defines a fixed width font.")
+(defvar my-monospace-fonts
+  '("Monaspace Radon Var" "Cascadia Code" "JetBrains Mono" "Consolas")
+  "A list of preferred monospace fonts, arranged from most favoured to least favoured.")
 
-(defvar my-variable-pitch-font "sans-serif"
-  "Defines a proportional width font.")
+(defvar my-sans-serif-fonts
+  '("Andika" "Lato" "Noto sans" "Open sans")
+  "A list of preferred sans-serif fonts, arranged from most favoured to least favoured.")
 
-(defun my-set-font-variables ()
-  "Set `my-fixed-pitch-font' and `my-variable-pitch-font'."
-  (setq my-fixed-pitch-font
-        (if (find-font (font-spec :name "Cascadia Code"))
-            "Cascadia Code"
-          (if my-windows-laptop-p "Consolas" "monospace")))
-  (setq my-variable-pitch-font
-        (if (find-font (font-spec :name "Noto Sans"))
-            "Noto Sans"
-          (if my-windows-laptop-p "Calibri" "sans-serif"))))
+(defun my-select-first-available-font (fonts &optional default)
+  "Select first available font from a list of fonts."
+  (if-let ((font (car fonts)))
+      (if (find-font (font-spec :family font))
+          font
+        (my-select-first-available-font (cdr fonts)))
+    default))
 
 (defun my-set-font-faces ()
   "Set font faces."
   (set-face-attribute 'default nil
-                      :font my-fixed-pitch-font
+                      :family (my-select-first-available-font my-monospace-fonts "monospace")
                       :weight 'normal
-                      :height 110)
+                      :height 108)
 
   (set-face-attribute 'fixed-pitch nil
-                      :font my-fixed-pitch-font
-                      :weight 'regular
+                      :family (face-attribute 'default :family)
+                      :weight 'normal
                       :height 1.0)
 
   (set-face-attribute 'variable-pitch  nil
-                      :font my-variable-pitch-font
+                      :family (my-select-first-available-font my-sans-serif-fonts "sans-serif")
                       :height 1.0))
 
-(my-set-font-variables)
 (my-set-font-faces)
+(add-hook 'server-after-make-frame-hook
+          (lambda ()
+            (my-set-font-faces)))
 
 (global-set-key (kbd "M-SPC")
                 (lambda ()
@@ -174,8 +179,7 @@
   :ensure t
   :config
   (setq doom-themes-enable-bold t)
-  (setq doom-themes-enable-italic t)
-  (load-theme 'doom-gruvbox t))
+  (setq doom-themes-enable-italic t))
 
 (defun my-disable-all-loaded-themes ()
   "Disable all loaded themes."
@@ -184,37 +188,27 @@
     (message "Disabling `%s' theme" theme)
     (disable-theme theme)))
 
-(defvar my-preferred-light-theme 'doom-gruvbox-light
-  "Preferred light theme.")
-
-(defvar my-preferred-dark-theme 'doom-ir-black
-  "Preferred dark theme.")
-
-(defun my-set-theme-variant (variant)
-  "Set light or dark theme variant."
-  (let ((theme (if (eq variant 'light) my-preferred-light-theme
-                  my-preferred-dark-theme)))
-    (my-disable-all-loaded-themes)
-    (load-theme theme t nil)))
-
+;; Note: the following is used in external script
 (defun my-load-theme (theme)
   "Load given theme after disabling all loaded themes."
   (my-disable-all-loaded-themes)
-  (load-theme theme t nil))
+  (load-theme theme t nil)
+  ;; FIXME: find a better way to override the modeline color
+  (let ((bg-color (face-attribute 'default :background)))
+    (set-face-attribute 'mode-line nil
+                        :background bg-color)
+    (set-face-attribute 'mode-line-inactive nil
+                        :background bg-color)))
+
+(my-load-theme 'doom-ir-black)
 
 (use-package doom-modeline
   :ensure t
   :config
   (setq doom-modeline-icon t)
-  (setq doom-modeline-height 12)
+  (setq doom-modeline-height 16)
+  (setq doom-modeline-bar-width 0)
   (doom-modeline-mode 1))
-
-(use-package spacious-padding
-  :ensure t
-  :init
-  (setq spacious-padding-subtle-mode-line nil)
-  :config
-  (spacious-padding-mode -1))
 
 (use-package dashboard
   :config
@@ -222,7 +216,13 @@
   (if my-windows-laptop-p
       (fset #'dashboard-replace-displayable (lambda (arg &rest _) arg)))
   :init
-  (setq dashboard-startup-banner 'logo)
+  (setq dashboard-startup-banner
+        (let ((logo-file (expand-file-name "logo.xpm" user-emacs-directory)))
+          (if (file-exists-p logo-file)
+              logo-file
+            'logo)))
+  (setq dashboard-image-banner-max-height 200)
+  (setq dashboard-image-banner-max-width  200)
   (setq dashboard-center-content t)
   (setq dashboard-set-heading-icons t)
   (setq dashboard-icon-type 'nerd-icons)
@@ -376,7 +376,7 @@
 (use-package org
   :pin org
   :commands
-  (org-capture org-agenda)
+  (org-capture org-agenda org-timer-set-timer)
   :hook
   (org-mode . (lambda ()
                 (my-org-font-face-setup)
@@ -532,7 +532,8 @@
 
 (when my-gnu/linux-laptop-p
   (use-package vterm
-    :ensure t))
+    :ensure t
+    :init (setq vterm-always-compile-module t)))
 
 (use-package editorconfig
   :ensure t)
@@ -820,14 +821,15 @@
 (use-package restclient
   :commands (restclient-mode))
 
-(setq major-mode-remap-alist
+(when my-gnu/linux-laptop-p
+  (setq major-mode-remap-alist
       '((yaml-mode . yaml-ts-mode)
         (bash-mode . bash-ts-mode)
         (js-mode . js-ts-mode)
         (typescript-mode . typescript-ts-mode)
         (json-mode . json-ts-mode)
         (css-mode . css-ts-mode)
-        (python-mode . python-ts-mode)))
+        (python-mode . python-ts-mode))))
 
 (use-package dired
   :ensure nil
@@ -866,30 +868,6 @@
     ((org-mode Info-mode) . olivetti-mode)
     :config
     (set-default 'olivetti-body-width 120)))
-
-(use-package elfeed
-  :hook
-  (elfeed-show-mode . visual-line-mode)
-  :config
-  (set-face-attribute 'elfeed-search-unread-title-face nil
-                      :font my-fixed-pitch-font
-                      :slant 'italic
-                      :weight 'bold)
-  (setq elfeed-feeds
-   '("http://nullprogram.com/feed/"
-     "https://levelofindirection.com/main.rss"
-     "https://blog.petrzemek.net/feed/"
-     "https://planet.emacslife.com/atom.xml")))
-
-(use-package erc
-  :commands
-  (erc-tls erc)
-  :config
-  (setq erc-server "irc.libera.chat")
-  (setq erc-port 6697)
-  (setq erc-prompt (lambda () (concat (buffer-name) ">")))
-  (setq erc-nick "px86")
-  (setq erc-fill-column 100))
 
 (use-package pulse
   :ensure nil  ; built-in package
@@ -961,10 +939,9 @@
          (visibility (frame-parameter frame 'undecorated)))
     (set-frame-parameter frame 'undecorated (not visibility))))
 
-(add-hook 'server-after-make-frame-hook
-          (lambda ()
-            (my-set-font-variables)
-            (my-set-font-faces)))
+(let ((private-config (expand-file-name "private.el" user-emacs-directory)))
+  (when (file-exists-p private-config)
+    (load-file private-config)))
 
 ;; Lower the GC threshold, again
 (setq gc-cons-threshold 16000000)

@@ -4,3 +4,5 @@ etc
 tree-sitter
 var
 *~
+private*.org
+private*.el
