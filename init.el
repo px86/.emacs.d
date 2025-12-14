@@ -61,10 +61,6 @@
   (set-frame-parameter (selected-frame) 'alpha-background 90)
   (add-to-list 'default-frame-alist `(alpha-background . 90)))
 
-  ;; (when my-gnu/linux-laptop-p
-  ;;   (set-frame-parameter (selected-frame) 'alpha-background 100)
-  ;;   (add-to-list 'default-frame-alist `(alpha-background . 100)))
-
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (defvar my-monospace-fonts
@@ -86,7 +82,8 @@
 (defun my-set-font-faces ()
   "Set font faces."
   (set-face-attribute 'default nil
-                      :family (my-select-first-available-font my-monospace-fonts "monospace")
+                      :family (my-select-first-available-font my-monospace-fonts
+                                                              "monospace")
                       :weight 'normal
                       :height 108)
 
@@ -96,7 +93,8 @@
                       :height 1.0)
 
   (set-face-attribute 'variable-pitch  nil
-                      :family (my-select-first-available-font my-sans-serif-fonts "sans-serif")
+                      :family (my-select-first-available-font my-sans-serif-fonts
+                                                              "sans-serif")
                       :height 1.0))
 
 (my-set-font-faces)
@@ -125,9 +123,7 @@
  (my-gnu/linux-laptop-p
   (my-set-register-if-file-exists ?B "~/.local/data/bookmarks")
   (my-set-register-if-file-exists ?H "~/.config/hypr/hyland.conf")
-  (my-set-register-if-file-exists ?K "~/.config/hypr/keybindings.conf")
-  (my-set-register-if-file-exists ?W "~/.config/waybar/config")
-  (my-set-register-if-file-exists ?G "~/src/repos/px86/README.org"))
+  (my-set-register-if-file-exists ?K "~/.config/hypr/keybindings.conf"))
  (my-windows-laptop-p
   (my-set-register-if-file-exists ?B "~/bookmarks.txt")))
 
@@ -181,6 +177,35 @@
   (setq doom-themes-enable-bold t)
   (setq doom-themes-enable-italic t))
 
+(use-package doom-modeline
+  :ensure t
+  :config
+  (setq doom-modeline-icon t)
+  (setq doom-modeline-height 16)
+  (setq doom-modeline-bar-width 0)
+  (doom-modeline-mode 1))
+
+;; (advice-add 'load-theme :after
+;;             (lambda (&rest r)
+;;               (set-face-attribute 'default nil
+;;                                   :background "#000000")))
+
+;; Override the modeline background with the current theme's background
+(advice-add 'load-theme :after
+            (lambda (&rest r)
+              (let ((bg-color (face-attribute 'default :background)))
+                (when bg-color
+                  (set-face-attribute 'mode-line nil
+                                      :background bg-color)
+                  (set-face-attribute 'mode-line-inactive nil
+                                      :background bg-color)))))
+
+(load-theme 'doom-ir-black t nil) ;; Load a theme
+
+(add-hook 'server-after-make-frame-hook
+          (lambda ()
+            (load-theme 'doom-ir-black t nil)))
+
 (defun my-disable-all-loaded-themes ()
   "Disable all loaded themes."
   (interactive)
@@ -192,23 +217,7 @@
 (defun my-load-theme (theme)
   "Load given theme after disabling all loaded themes."
   (my-disable-all-loaded-themes)
-  (load-theme theme t nil)
-  ;; FIXME: find a better way to override the modeline color
-  (let ((bg-color (face-attribute 'default :background)))
-    (set-face-attribute 'mode-line nil
-                        :background bg-color)
-    (set-face-attribute 'mode-line-inactive nil
-                        :background bg-color)))
-
-(my-load-theme 'doom-ir-black)
-
-(use-package doom-modeline
-  :ensure t
-  :config
-  (setq doom-modeline-icon t)
-  (setq doom-modeline-height 16)
-  (setq doom-modeline-bar-width 0)
-  (doom-modeline-mode 1))
+  (load-theme theme t nil))
 
 (use-package dashboard
   :config
@@ -257,8 +266,6 @@
   :after vertico
   :config
   (setq marginalia-align 'right)
-  (setq marginalia-annotators '(marginalia-annotators-heavy
-                                marginalia-annotators-light nil))
   (marginalia-mode))
 
 (use-package ace-window
@@ -284,8 +291,10 @@
 (setq split-width-threshold 145)
 
 (setq display-buffer-alist
-      `(((derived-mode . compilation-mode)
+      `(;; If *compilation* buffer is already being displayed in a window (in any frame) reuse it.
+        ((major-mode . compilation-mode)
          (display-buffer-reuse-window display-buffer-below-selected)
+         (reusable-frames . t)
          (dedicated . t)
          (preserve-size (nil . t))
          (window-height . fit-window-to-buffer))
@@ -306,12 +315,13 @@
          (slot . 0)
          (window-parameters . ((mode-line-format . none))))
 
-        ;; bottom buffer (NOT side window)
+        ;; bottom window (NOT side window)
         ((or . ((derived-mode . flymake-diagnostics-buffer-mode)
                 (derived-mode . flymake-project-diagnostics-mode)
                 (derived-mode . messages-buffer-mode)
                 (derived-mode . backtrace-mode)))
          (display-buffer-reuse-mode-window display-buffer-at-bottom)
+         (reusable-frames . t)
          (window-height . 0.3)
          (dedicated . t)
          (preserve-size . (t . t)))
@@ -899,32 +909,6 @@
               (if mark-active
                   (pulse-momentary-highlight-region (region-beginning) (region-end))
                 (pulse-momentary-highlight-one-line (point)))))
-
-(when my-gnu/linux-laptop-p
-  ;; needed for vc-git-root function
-  (require 'vc-git)
-
-  (defun my-launch-terminal ()
-    "Launch a terminal in project root or in current working directory."
-    (interactive)
-    (let* ((term (getenv "TERMINAL"))
-           (terminal (if term term "xterm"))
-           (filename (buffer-file-name))
-           (dir (if filename
-                    (vc-git-root filename)
-                  nil))
-           (default-directory (or dir
-                                  default-directory)))
-      (start-process "Terminal" nil terminal)))
-
-  (defun my-launch-terminal-in-cwd ()
-    "Launch a terminal in the current working directory."
-    (interactive)
-    (let* ((term (getenv "TERMINAL"))
-           (terminal (if term term "xterm")))
-      (start-process "Terminal" nil terminal)))
-
-  (global-set-key (kbd "s-t") #'my-launch-terminal))
 
 (setq initial-buffer-choice
       (lambda () (let* ((buf (get-buffer "*dashboard*")))
